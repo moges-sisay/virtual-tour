@@ -1,28 +1,29 @@
-// src/components/HotspotOverlay.jsx
+// HotspotOverlay.jsx
 import React from "react";
-import { Box, Typography } from "@mui/material";
+import { Box } from "@mui/material";
 
-export default function HotspotOverlay({ hotspots = [] }) {
+const HotspotOverlay = () => {
+  const handleClick = () => {
+    alert("Hotspot clicked!");
+  };
+
   return (
-    <>
-      {hotspots.map((hotspot, index) => (
-        <Box
-          key={index}
-          sx={{
-            position: "absolute",
-            top: hotspot.y,
-            left: hotspot.x,
-            backgroundColor: "rgba(255, 255, 255, 0.8)",
-            padding: "4px 8px",
-            borderRadius: 1,
-            transform: "translate(-50%, -50%)",
-            pointerEvents: "none",
-            zIndex: 5,
-          }}
-        >
-          <Typography variant="caption">{hotspot.label}</Typography>
-        </Box>
-      ))}
-    </>
+    <Box
+      onClick={handleClick}
+      sx={{
+        position: "absolute",
+        top: "50%", // center vertically (50% from top)
+        left: "50%", // center horizontally (50% from left)
+        width: 24,
+        height: 24,
+        backgroundColor: "rgba(255, 0, 0, 0.7)",
+        borderRadius: "50%",
+        transform: "translate(-50%, -50%)", // offset by half of its width/height
+        cursor: "pointer",
+        zIndex: 5,
+      }}
+    />
   );
-}
+};
+
+export default HotspotOverlay;

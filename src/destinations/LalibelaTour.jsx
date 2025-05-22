@@ -1,31 +1,33 @@
-// src/destinations/LalibelaTour.jsx
+// LalibelaTour.jsx
 import React, { useEffect } from "react";
-import { Typography, Box } from "@mui/material";
-import { useTourContext } from "../context/TourContext";
+import { Box } from "@mui/material";
+import { useContext } from "react";
+import TourContext from "../context/TourContext";
 import ImageGallery from "../components/ImageGallery";
 import ImageViewer from "../components/ImageViewer";
-import HotspotOverlay from "../components/HotspotOverlay";
 
-export default function LalibelaTour() {
-  const { setDestination, images, selectedImage } = useTourContext();
+const LalibelaTour = () => {
+  const { setSelectedDestination, setSelectedImage } = useContext(TourContext);
+  const images = [
+    "/images/lalibela-1.png",
+    "/images/lalibela-2.png",
+    "/images/lalibela-3.png",
+    "/images/lalibela-4.png",
+    "/images/lalibela-5.png",
+    "/images/lalibela-6.png",
+  ];
 
   useEffect(() => {
-    setDestination("lalibela");
-  }, [setDestination]);
+    setSelectedDestination("Lalibela");
+    setSelectedImage(images[0]);
+  }, []);
 
   return (
-    <>
-      <Typography variant="h5" sx={{ mt: 4, mb: 2 }}>
-        Lalibela 3D Virtual Tour
-      </Typography>
-
-      <Box component="section" sx={{ px: 2 }}>
-        <ImageGallery images={images} />
-        {selectedImage && <ImageViewer />}
-        <HotspotOverlay
-          hotspots={[{ x: "50%", y: "50%", label: "Info Spot" }]}
-        />
-      </Box>
-    </>
+    <Box sx={{ display: "flex", height: "100vh" }}>
+      <ImageGallery images={images} />
+      <ImageViewer />
+    </Box>
   );
-}
+};
+
+export default LalibelaTour;

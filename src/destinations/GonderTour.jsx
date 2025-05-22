@@ -1,31 +1,33 @@
-// src/destinations/GonderTour.jsx
+// GonderTour.jsx
 import React, { useEffect } from "react";
-import { Typography, Box } from "@mui/material";
-import { useTourContext } from "../context/TourContext";
+import { Box } from "@mui/material";
+import { useContext } from "react";
+import TourContext from "../context/TourContext";
 import ImageGallery from "../components/ImageGallery";
 import ImageViewer from "../components/ImageViewer";
-import HotspotOverlay from "../components/HotspotOverlay";
 
-export default function GonderTour() {
-  const { setDestination, images, selectedImage } = useTourContext();
+const GonderTour = () => {
+  const { setSelectedDestination, setSelectedImage } = useContext(TourContext);
+  const images = [
+    "/images/gonder-1.jpg",
+    "/images/gonder-2.jpg",
+    "/images/gonder-3.jpg",
+    "/images/gonder-4.jpg",
+    "/images/gonder-5.jpg",
+    "/images/gonder-6.jpg",
+  ];
 
   useEffect(() => {
-    setDestination("gonder");
-  }, [setDestination]);
+    setSelectedDestination("Gondar");
+    setSelectedImage(images[0]);
+  }, []);
 
   return (
-    <>
-      <Typography variant="h5" sx={{ mt: 4, mb: 2 }}>
-        Gonder 3D Virtual Tour
-      </Typography>
-
-      <Box component="section" sx={{ px: 2 }}>
-        <ImageGallery images={images} />
-        {selectedImage && <ImageViewer />}
-        <HotspotOverlay
-          hotspots={[{ x: "50%", y: "50%", label: "Info Spot" }]}
-        />
-      </Box>
-    </>
+    <Box sx={{ display: "flex", height: "100vh" }}>
+      <ImageGallery images={images} />
+      <ImageViewer />
+    </Box>
   );
-}
+};
+
+export default GonderTour;

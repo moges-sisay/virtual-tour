@@ -1,29 +1,34 @@
-// src/components/ImageGallery.jsx
-import React from "react";
-import { Grid, Card, CardMedia } from "@mui/material";
-import { useTourContext } from "../context/TourContext";
+// ImageGallery.jsx
+import React, { useContext } from "react";
+import { ImageList, ImageListItem } from "@mui/material";
+import TourContext from "../context/TourContext";
 
 const ImageGallery = ({ images }) => {
-  const { setSelectedImage } = useTourContext();
+  const { selectedImage, setSelectedImage } = useContext(TourContext);
 
   return (
-    <Grid container spacing={2} justifyContent="center" padding={2}>
-      {images.map((src, index) => (
-        <Grid item key={index}>
-          <Card
-            sx={{ width: 140, cursor: "pointer" }}
-            onClick={() => setSelectedImage(src)}
+    <div
+      style={{ width: "25%", overflowY: "auto", backgroundColor: "#f5f5f5" }}
+    >
+      <ImageList cols={1} gap={8}>
+        {images.map((img, index) => (
+          <ImageListItem
+            key={index}
+            onClick={() => setSelectedImage(img)}
+            sx={{ cursor: "pointer" }}
           >
-            <CardMedia
-              component="img"
-              height="100"
-              image={src}
-              alt={`Tour image ${index + 1}`}
+            <img
+              src={img}
+              alt={`Thumbnail ${index}`}
+              style={{
+                width: "100%",
+                border: selectedImage === img ? "2px solid blue" : "none",
+              }}
             />
-          </Card>
-        </Grid>
-      ))}
-    </Grid>
+          </ImageListItem>
+        ))}
+      </ImageList>
+    </div>
   );
 };
 

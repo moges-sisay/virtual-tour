@@ -1,31 +1,37 @@
-// src/destinations/BahirDarTour.jsx
+// BahirDarTour.jsx
 import React, { useEffect } from "react";
-import { Typography, Box } from "@mui/material";
-import { useTourContext } from "../context/TourContext";
+import { Box } from "@mui/material";
+import { useContext } from "react";
+import TourContext from "../context/TourContext";
 import ImageGallery from "../components/ImageGallery";
 import ImageViewer from "../components/ImageViewer";
-import HotspotOverlay from "../components/HotspotOverlay";
 
-export default function BahirDarTour() {
-  const { setDestination, images, selectedImage } = useTourContext();
+const BahirDarTour = () => {
+  const { setSelectedDestination, setSelectedImage } = useContext(TourContext);
+  // Array of panorama images for Bahir Dar (in public/images/)
+  const images = [
+    "/images/bahirdar-1.jpg",
+    "/images/bahirdar-2.jpg",
+    "/images/bahirdar-3.jpg",
+    "/images/bahirdar-4.jpg",
+    "/images/bahirdar-5.jpg",
+    "/images/bahirdar-6.jpg",
+  ];
 
+  // On mount, set the destination and default image
   useEffect(() => {
-    setDestination("bahirdar");
-  }, [setDestination]);
+    setSelectedDestination("Bahir Dar");
+    setSelectedImage(images[0]);
+  }, []);
 
   return (
-    <>
-      <Typography variant="h5" sx={{ mt: 4, mb: 2 }}>
-        Bahir Dar 3D Virtual Tour
-      </Typography>
-
-      <Box component="section" sx={{ px: 2 }}>
-        <ImageGallery images={images} />
-        {selectedImage && <ImageViewer />}
-        <HotspotOverlay
-          hotspots={[{ x: "50%", y: "50%", label: "Info Spot" }]}
-        />
-      </Box>
-    </>
+    <Box sx={{ display: "flex", height: "100vh" }}>
+      {/* Thumbnails on left */}
+      <ImageGallery images={images} />
+      {/* 360 viewer on right */}
+      <ImageViewer />
+    </Box>
   );
-}
+};
+
+export default BahirDarTour;

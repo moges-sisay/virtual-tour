@@ -1,156 +1,94 @@
-// src/components/ImageViewer.jsx
-import React, { useEffect, useRef, useState } from "react";
+// ImageViewer.jsx
+import React, { useEffect, useRef, useContext } from "react";
 import * as THREE from "three";
-import { useTourContext } from "../context/TourContext";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import TourContext from "../context/TourContext";
 import FullscreenToggle from "./FullscreenToggle";
 import HotspotOverlay from "./HotspotOverlay";
+import { Box } from "@mui/material";
 
-export default function ImageViewer() {
-  const mountRef = useRef(null);
-  const { selectedImage } = useTourContext();
-  const [hotspots, setHotspots] = useState([
-    { x: "50%", y: "50%", label: "Center View" },
-    { x: "75%", y: "40%", label: "Info Spot" },
-  ]);
-
-  const rendererRef = useRef();
-  const sceneRef = useRef();
-  const cameraRef = useRef();
-  const sphereRef = useRef();
+const ImageViewer = () => {
+  const containerRef = useRef();
+  const { selectedImage } = useContext(TourContext);
 
   useEffect(() => {
-    const container = mountRef.current;
-    if (!container) return;
+    if (!selectedImage || !containerRef.current) return;
+    let renderer, scene, camera, controls, sphere;
 
-    // Renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    container.appendChild(renderer.domElement);
-    rendererRef.current = renderer;
+    // Set up scene
+    scene = new THREE.Scene();
+    const width = containerRef.current.clientWidth;
+    const height = containerRef.current.clientHeight;
 
-    // Scene and Camera
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(
-      75,
-      container.clientWidth / container.clientHeight,
-      0.1,
-      1000
-    );
+    // Camera positioned at sphere center
+    camera = new THREE.PerspectiveCamera(75, width / height, 1, 1100);
     camera.position.set(0, 0, 0.1);
-    sceneRef.current = scene;
-    cameraRef.current = camera;
 
-    // Sphere geometry
+    // Sphere geometry (inverted)
     const geometry = new THREE.SphereGeometry(500, 60, 40);
     geometry.scale(-1, 1, 1);
-    const material = new THREE.MeshBasicMaterial({ color: 0x000000 });
-    const sphere = new THREE.Mesh(geometry, material);
-    scene.add(sphere);
-    sphereRef.current = sphere;
 
-    // Mouse interaction
-    let isUserInteracting = false;
-    let lon = 0,
-      lat = 0;
+    // Load texture and create mesh
+    const loader = new THREE.TextureLoader();
+    loader.load(selectedImage, (texture) => {
+      const material = new THREE.MeshBasicMaterial({ map: texture });
+      sphere = new THREE.Mesh(geometry, material);
+      scene.add(sphere);
+      // Render initial frame after texture loads
+      renderer.render(scene, camera);
+    });
 
-    function onMouseDown() {
-      isUserInteracting = true;
-    }
+    // Renderer
+    renderer = new THREE.WebGLRenderer();
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(width, height);
+    containerRef.current.appendChild(renderer.domElement);
 
-    function onMouseUp() {
-      isUserInteracting = false;
-    }
+    // OrbitControls for user interaction
+    controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableZoom = true;
 
-    function onMouseMove(event) {
-      if (!isUserInteracting) return;
-      lon -= event.movementX * 0.1;
-      lat += event.movementY * 0.1;
-      lat = Math.max(-85, Math.min(85, lat));
-      const phi = THREE.MathUtils.degToRad(90 - lat);
-      const theta = THREE.MathUtils.degToRad(lon);
-      camera.lookAt(
-        new THREE.Vector3(
-          500 * Math.sin(phi) * Math.cos(theta),
-          500 * Math.cos(phi),
-          500 * Math.sin(phi) * Math.sin(theta)
-        )
-      );
-    }
+    // Handle window resize
+    const handleResize = () => {
+      const w = containerRef.current.clientWidth;
+      const h = containerRef.current.clientHeight;
+      renderer.setSize(w, h);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    };
+    window.addEventListener("resize", handleResize);
 
-    const canvas = renderer.domElement;
-    canvas.addEventListener("mousedown", onMouseDown);
-    canvas.addEventListener("mouseup", onMouseUp);
-    canvas.addEventListener("mousemove", onMouseMove);
-
-    // Animate
+    // Animation loop
     const animate = () => {
       requestAnimationFrame(animate);
+      controls.update();
       renderer.render(scene, camera);
     };
     animate();
 
-    // Cleanup
+    // Cleanup on unmount or image change
     return () => {
-      canvas.removeEventListener("mousedown", onMouseDown);
-      canvas.removeEventListener("mouseup", onMouseUp);
-      canvas.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("resize", handleResize);
+      if (renderer.domElement)
+        containerRef.current.removeChild(renderer.domElement);
+      controls.dispose();
+      geometry.dispose();
+      if (sphere && sphere.material.map) sphere.material.map.dispose();
+      if (sphere && sphere.material) sphere.material.dispose();
       renderer.dispose();
-      if (container.firstChild) container.removeChild(container.firstChild);
     };
-  }, []);
-
-  // Load new texture when selectedImage changes
-  useEffect(() => {
-    if (!selectedImage || !sphereRef.current) return;
-
-    const material = sphereRef.current.material;
-    if (material.map) {
-      material.map.dispose();
-      material.map = null;
-    }
-
-    new THREE.TextureLoader().load(
-      selectedImage,
-      (texture) => {
-        texture.generateMipmaps = false;
-        texture.minFilter = THREE.LinearFilter;
-        texture.magFilter = THREE.LinearFilter;
-        texture.needsUpdate = true;
-
-        material.map = texture;
-        material.needsUpdate = true;
-      },
-      undefined,
-      (err) => console.error("Texture load error:", err)
-    );
   }, [selectedImage]);
 
-  const toggleFullscreen = () => {
-    const container = mountRef.current;
-    if (!document.fullscreenElement) {
-      container
-        .requestFullscreen()
-        .catch((err) => console.error("Fullscreen error:", err));
-    } else {
-      document.exitFullscreen();
-    }
-  };
-
-  if (!selectedImage) return null;
-
   return (
-    <div
-      ref={mountRef}
-      style={{
-        position: "relative",
-        width: "100%",
-        height: "100vh",
-        background: "#000",
-        overflow: "hidden",
-      }}
-    >
-      <FullscreenToggle onClick={toggleFullscreen} />
-      <HotspotOverlay hotspots={hotspots} />
-    </div>
+    <Box sx={{ position: "relative", flex: 1 }}>
+      {/* Div for Three.js canvas */}
+      <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
+      {/* Fullscreen button overlaid */}
+      <FullscreenToggle containerRef={containerRef} />
+      {/* Example hotspot overlay */}
+      <HotspotOverlay />
+    </Box>
   );
-}
+};
+
+export default ImageViewer;
